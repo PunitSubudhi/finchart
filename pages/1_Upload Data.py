@@ -118,4 +118,5 @@ if file is not None:
         st.dataframe(parsed_df.head(num_rows))
     # For any data that is not parsed, ask user to correct it with a option to download the wrong data
     # Add Button to continue to next page : Charts
+    st.button("Continue to Charts",key='Continue to Charts',help="Click to continue to the next page to view the charts",on_click=None)
     
