@@ -95,6 +95,9 @@ if file is not None:
         st.toast("adding Column cr/dr as Credit/Debit")
         data['cr/dr'] = data['Amount'].apply(lambda x: 'Credit' if x > 0 else 'Debit')
         data['Amount'] = data['Amount'].apply(lambda x: x if x > 0 else -x)
+
+    data_columns: list = list(data.columns)
+    data_types: list = list(data.dtypes.to_list())
     for key,value in dict_columns.items():
         if value != "":
             parsed_df[key] = data[value]
