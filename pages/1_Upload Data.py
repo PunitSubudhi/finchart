@@ -82,6 +82,15 @@ if file is not None:
     
     num_cols = len(columns)
     cols=st.columns(num_cols)
+    
+    if file_type == '+/-':
+        st.toast("adding Column cr/dr as Credit/Debit")
+        data['cr/dr'] = data['Amount'].apply(lambda x: 'Credit' if x > 0 else 'Debit')
+        data['Amount'] = data['Amount'].apply(lambda x: x if x > 0 else -x)
+
+    data_columns: list = list(data.columns)
+    data_types: list = list(data.dtypes.to_list())
+    
     for i , col in enumerate(cols):
         col.write(columns[i])
         col.write("maps to")
@@ -91,13 +100,7 @@ if file is not None:
             dict_columns[columns[i]] = col_name
     print(dict_columns)
     st.write(dict_columns)
-    if file_type == '+/-':
-        st.toast("adding Column cr/dr as Credit/Debit")
-        data['cr/dr'] = data['Amount'].apply(lambda x: 'Credit' if x > 0 else 'Debit')
-        data['Amount'] = data['Amount'].apply(lambda x: x if x > 0 else -x)
-
-    data_columns: list = list(data.columns)
-    data_types: list = list(data.dtypes.to_list())
+    
     for key,value in dict_columns.items():
         if value != "":
             parsed_df[key] = data[value]
