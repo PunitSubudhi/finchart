@@ -86,10 +86,10 @@ if file is not None:
     if file_type == '+/-':
         try:
             amount_col = st.selectbox("Select the Column that represents Amount",data_columns)
-            
-            data['cr/dr'] = data[amount_col].apply(lambda x: 'Credit' if x > 0 else 'Debit')
-            data[amount_col] = data[amount_col].apply(lambda x: x if x > 0 else -x)
-            st.toast("adding Column cr/dr as Credit/Debit")
+            if amount_col:
+                data['cr/dr'] = data[amount_col].apply(lambda x: 'Credit' if x > 0 else 'Debit')
+                data[amount_col] = data[amount_col].apply(lambda x: x if x > 0 else -x)
+                st.toast("adding Column cr/dr as Credit/Debit")
         except Exception as e:
             st.error(f"Error in Adding Column cr/dr: {e}")
 
