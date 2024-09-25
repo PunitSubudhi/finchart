@@ -110,7 +110,7 @@ if file is not None:
     with st.expander(label="Parsed Data",expanded=False):
         st.write("Parsed Data Sample")
         num_rows = st.number_input("Number of Rows to Display",min_value=1,max_value=10,value=5)
-        st.dataframe(parsed_df.head(5))
+        st.dataframe(parsed_df.head(num_rows))
     # For any data that is not parsed, ask user to correct it with a option to download the wrong data
     # Add Button to continue to next page : Charts
     
