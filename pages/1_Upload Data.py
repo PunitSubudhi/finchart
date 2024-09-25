@@ -8,7 +8,7 @@ import openpyxl
 st.set_page_config(layout="wide")
 
 # Default Columns for Standardised financial data
-columns: list[str] = ['Date', 'Description', 'Amount', 'Category', 'Subcategory', 'Type','Balance']
+columns: list[str] = ['Date', 'Description', 'Amount', 'Category', 'Subcategory', 'cr/dr','Balance']
 parsed_df = pd.DataFrame(columns=columns)
 
 st.title('Upload your Transactions below to continue...')
