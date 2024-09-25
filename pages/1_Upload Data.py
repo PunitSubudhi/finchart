@@ -105,9 +105,12 @@ if file is not None:
         if value != "":
             parsed_df[key] = data[value]
     
-    st.dataframe(parsed_df)
     
-    # Parse Data and display first 5 rows to the user with a before and after view
+    # Parse Data and display random 5 rows to the user with a before and after view
+    with st.expander(label="Parsed Data",expanded=False):
+        st.write("Parsed Data Sample")
+        num_rows = st.number_input("Number of Rows to Display",min_value=1,max_value=10,value=5)
+        st.dataframe(parsed_df.head(5))
     # For any data that is not parsed, ask user to correct it with a option to download the wrong data
     # Add Button to continue to next page : Charts
     
