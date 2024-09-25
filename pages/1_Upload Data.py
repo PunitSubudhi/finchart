@@ -99,7 +99,7 @@ if file is not None:
     for i , col in enumerate(cols):
         col.write(columns[i])
         col.write("maps to")
-        col_name = col.selectbox("",data_columns,key=i)
+        col_name = col.selectbox("  ",data_columns,key=i,label_visibility='collapsed')
         if col_name:
             
             dict_columns[columns[i]] = col_name
