@@ -13,11 +13,10 @@ parsed_df = pd.DataFrame(columns=columns)
 
 st.title('Upload your Transactions below to continue...')
 
-# Upload File
 
-# Detect File Type
 c1,c2,c3 = st.columns([0.4,0.2,0.2])
 
+# Upload File
 file = c1.file_uploader('Upload your Transactions here', type=['csv', 'xlsx'])
 
 with c3:
@@ -26,6 +25,7 @@ with c3:
 
 if file is not None:
     file_type = file.type
+    # Detect File Type
     if file_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
         file_type = 'xlsx'
     elif file_type == 'text/csv':
