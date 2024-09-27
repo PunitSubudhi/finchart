@@ -4,6 +4,7 @@ import numpy as np
 from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_option_menu import option_menu
 import openpyxl
+import base64
 
 st.set_page_config(layout="wide")
 
