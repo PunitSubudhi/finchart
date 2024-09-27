@@ -116,9 +116,18 @@ if file is not None:
         st.write("Parsed Data Sample")
         num_rows = st.number_input("Number of Rows to Display",min_value=1,max_value=10,value=5)
         st.dataframe(parsed_df.head(num_rows))
+
+        # Give download option for the Processed Data
+        st.markdown("#### Download Parsed Data")
+        st.markdown("Click the button below to download the parsed data")
+        csv = parsed_df.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="parsed_data.csv">Download Parsed Data</a>'
+        st.markdown(href, unsafe_allow_html=True)
+        
+        
     # For any data that is not parsed, ask user to correct it with a option to download the wrong data
     # Add Button to continue to next page : Charts
     #st.button("Continue to Charts",key='Continue to Charts',help="Click to continue to the next page to view the charts",on_click=None)
     
     # Create charts for the parsed data
-    st.title("Charts")
