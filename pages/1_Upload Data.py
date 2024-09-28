@@ -5,10 +5,58 @@ from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_option_menu import option_menu
 import openpyxl
 import base64
+import plotly.express as px
+
+
+def show_charts():
+    df = st.session_state.parsed_df
+    
+    with st.expander(label="View / Download Parsed Data",expanded=False):
+        c1,c2=st.columns([0.4,0.6])
+        num_rows = c1.number_input("Number of Rows to Display",min_value=1,max_value=10,value=5)
+        c2.dataframe(parsed_df.head(num_rows))
+
+        # Give download option for the Processed Data
+        csv = parsed_df.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="parsed_data.csv">Download Parsed Data</a>'
+        c1.download_button("Download Parsed Data",data=csv,file_name="parsed_data.csv",mime="text/csv")
+        c1.markdown(href, unsafe_allow_html=True)
+    
+    # Plotting the data
+    st.markdown("### Charts and Graphs")
+    
+    # Line chart for Balance over time
+    st.markdown("#### Balance Over Time")
+    fig_balance = px.line(df, x='Date', y='Balance', title='Balance Over Time')
+    st.plotly_chart(fig_balance, use_container_width=True)
+    
+    # Bar chart for Amount by Category
+    st.markdown("#### Amount by Category")
+    fig_amount_category = px.bar(df, x='Category', y='Amount', title='Amount by Category', color='Category')
+    st.plotly_chart(fig_amount_category, use_container_width=True)
+    
+    # Pie chart for Credit vs Debit
+    st.markdown("#### Credit vs Debit")
+    credit_debit_counts = df['crdr'].value_counts().reset_index()
+    credit_debit_counts.columns = ['Type', 'Count']
+    fig_credit_debit = px.pie(credit_debit_counts, names='Type', values='Count', title='Credit vs Debit')
+    st.plotly_chart(fig_credit_debit, use_container_width=True)
+    
+    # Scatter plot for Amount vs Balance
+    st.markdown("#### Amount vs Balance")
+    fig_amount_balance = px.scatter(df, x='Amount', y='Balance', title='Amount vs Balance', color='Category')
+    st.plotly_chart(fig_amount_balance, use_container_width=True)
+    
+    # Histogram for Amount distribution
+    st.markdown("#### Amount Distribution")
+    fig_amount_dist = px.histogram(df, x='Amount', title='Amount Distribution')
+    st.plotly_chart(fig_amount_dist, use_container_width=True)
 
 st.set_page_config(layout="wide")
 
 #st.write(st.session_state)
+placeholder=st.empty()
 #Default Columns for Standardised financial data
 st.session_state.fixed_columns: list[str] = ['Date', 'Description', 'Amount', 'Category', 'crdr','Balance']
 st.session_state.parsed_df=None
@@ -102,10 +150,10 @@ if file is not None:
             
             num_cols = len(columns)
             cols=st.columns(num_cols)
-            rows=[st.columns([0.2,0.2,0.8]) for i in range(len(columns))]
+            
             data_columns: list = list(data.columns)
             data_types: list = list(data.dtypes.to_list())
-            
+            rows=[st.columns([0.2,0.2,0.8]) for i in range(len(columns))]
             for i , row in enumerate(rows):
                 row[0].write(f"{columns[i]} maps to:")
                 if columns[i] == 'crdr' and transaction_posted_type == 'Plus/Minus':
@@ -114,39 +162,24 @@ if file is not None:
                     col_name = row[1].selectbox(f"{columns[i]} maps to:",data_columns,key=i,label_visibility='collapsed',index=None)
                 if col_name:
                     st.session_state.col_map_dict[columns[i]] = col_name
-                    
-            #st.write(st.session_state.col_map_dict)
             
-            if st.button("continue"):
+            
+            if st.button("Map Columns and show charts",key='Map Columns'):
                 try:
                     for key,value in st.session_state.col_map_dict.items():
                         if value != "":
                             parsed_df[key] = data[value]
                     st.session_state.parsed_df = parsed_df
+                    show_charts()
                 except Exception as e:
                     st.error(f"Error in mapping columns: {e}")
-            
             # Parse Data and display random 5 rows to the user with a before and after view
-            with st.expander(label="View / Download Parsed Data",expanded=False):
-                c1,c2=st.columns([0.4,0.6])
-                num_rows = c1.number_input("Number of Rows to Display",min_value=1,max_value=10,value=5)
-                c2.dataframe(parsed_df.head(num_rows))
-
-                # Give download option for the Processed Data
-                csv = parsed_df.to_csv(index=False)
-                b64 = base64.b64encode(csv.encode()).decode()
-                href = f'<a href="data:file/csv;base64,{b64}" download="parsed_data.csv">Download Parsed Data</a>'
-                c1.download_button("Download Parsed Data",data=csv,file_name="parsed_data.csv",mime="text/csv")
-                c1.markdown(href, unsafe_allow_html=True)
             
             
-            if st.session_state.parsed_df is not None:
-                st.success("Data Parsed Successfully")
-                # Add Button to continue to next page : Charts
-                if st.button("Continue to Charts",key='Continue to Charts',help="Click to continue to the next page to view the charts"):
-                    st.switch_page("pages/2_Charts.py") 
+            
+            
             # For any data that is not parsed, ask user to correct it with a option to download the wrong data
             # Add Button to continue to next page : Charts
             #st.button("Continue to Charts",key='Continue to Charts',help="Click to continue to the next page to view the charts",on_click=None)
-            
-            # Create charts for the parsed data
+
+
