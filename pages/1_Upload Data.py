@@ -11,6 +11,7 @@ st.set_page_config(layout="wide")
 #st.write(st.session_state)
 #Default Columns for Standardised financial data
 st.session_state.fixed_columns: list[str] = ['Date', 'Description', 'Amount', 'Category', 'crdr','Balance']
+st.session_state.parsed_df=None
 parsed_df = pd.DataFrame(columns=st.session_state.fixed_columns)
 columns = st.session_state.fixed_columns
 st.session_state.col_map_dict = {col:None for col in columns}
