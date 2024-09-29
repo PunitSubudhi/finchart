@@ -13,6 +13,8 @@ FinCharts is a web application built with Streamlit that allows users to upload 
 
 To use FinCharts, visit the hosted version at [finchart.streamlit.app](https://finchart.streamlit.app).
 
+Please note that some logs are maintained to track errors however no actual data is retained.
+
 ## Dependencies
 
 - Streamlit

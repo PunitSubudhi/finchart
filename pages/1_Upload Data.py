@@ -2,15 +2,17 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from streamlit_extras.dataframe_explorer import dataframe_explorer
-from streamlit_option_menu import option_menu
 import openpyxl
 import base64
 import plotly.express as px
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
+
 
 
 def show_charts():
     df = st.session_state.parsed_df
-    
     with st.expander(label="View / Download Parsed Data",expanded=False):
         c1,c2=st.columns([0.4,0.6])
         num_rows = c1.number_input("Number of Rows to Display",min_value=1,max_value=10,value=5)
@@ -53,16 +55,33 @@ def show_charts():
     fig_amount_dist = px.histogram(df, x='Amount', title='Amount Distribution')
     st.plotly_chart(fig_amount_dist, use_container_width=True)
 
+def try_log (log):
+    try:
+        # Add Date time to log
+        st.session_state.log.update({'date':pd.Timestamp.now()})
+        log.insert_one(st.session_state.log)
+        st.session_state.log_status = True
+    except Exception as e:
+        st.error(f"Error in Logging: {e}")
+        st.session_state.log_status = False
+
 st.set_page_config(layout="wide")
+# Database Connection
+DB_uri = f"mongodb+srv://{st.secrets["DB_USERNAME"]}:{st.secrets["DB_PASSWORD"]}@{st.secrets["DB_HOST"]}/?retryWrites=true&w=majority&appName=Log"
+client = MongoClient(DB_uri, server_api=ServerApi('1'))
+log = client['logs']['log']
 
 #st.write(st.session_state)
-placeholder=st.empty()
 #Default Columns for Standardised financial data
 st.session_state.fixed_columns: list[str] = ['Date', 'Description', 'Amount', 'Category', 'crdr','Balance']
+columns = st.session_state.fixed_columns
+
 st.session_state.parsed_df=None
 parsed_df = pd.DataFrame(columns=st.session_state.fixed_columns)
-columns = st.session_state.fixed_columns
+
 st.session_state.col_map_dict = {col:None for col in columns}
+st.session_state.log_status = False
+st.session_state.log = {}
 
 
 
@@ -92,10 +111,12 @@ if file is not None:
     # Check if data is there
     if data.empty:
         st.error("No Data Found in the Uploaded File")
+        st.session_state.log.update({'error':'No Data Found in the Uploaded File'})
     else:
         #Date,Description, Amount, Category, Subcategory, Type = st.columns(6)
         num_rows,num_cols = data.shape
         st.toast(f"Data Loaded Successfully with {num_rows} rows and {num_cols} columns",icon='✅')
+        st.session_state.log.update({'data_load_status':f'Data Loaded Successfully with {num_rows} rows and {num_cols} columns'})
         discover_data_view = st.expander('Click here to view and discover data',expanded=False)
         with discover_data_view:
             st.dataframe(dataframe_explorer(data,case=False), use_container_width=True)
@@ -106,8 +127,9 @@ if file is not None:
                                            key='file_type',
                                            horizontal=True,
                                            index=None)
-        st.write(transaction_posted_type)
+        #st.write(transaction_posted_type)
         st.session_state.transaction_posted_type = transaction_posted_type
+        st.session_state.log.update({'transaction_posted_type':transaction_posted_type})
         
         if transaction_posted_type == 'Plus/Minus':
             st.markdown("##### Please select the column that represents the Amount in the uploaded data",
@@ -127,6 +149,8 @@ if file is not None:
                     st.toast("adding Column cr/dr as Credit/Debit")
                 except Exception as e:
                     st.error(f"Error in Adding Column cr/dr: {e}")
+                    st.session_state.log.update({'error':f"Error in Adding Column cr/dr: {e}"})
+                    
                     
         elif transaction_posted_type == 'Debit/Credit':
             amount_column_name = 'Amount'
@@ -134,15 +158,6 @@ if file is not None:
         else:
             amount_column_name = None
             
-        #with st.expander(label="Data Columns and Data Types",expanded=False):
-        # Check Data Columns and display it to the user
-         #   st.write("Columns and data types in the Uploaded Data")
-          #  st.dataframe(pd.DataFrame(np.array([data_types]),columns=data_columns,index=['Data Type']))
-           # st.write ("Required Columns for Standardised financial data")
-            #st.dataframe(pd.DataFrame(np.array([columns]),columns=columns,index=['Data Type']))
-        #st.dataframe(pd.DataFrame(data=data_types,columns=data_columns,index=None),use_container_width=True)
-        
-        
         if amount_column_name is not None:
         
         # Ask User to map columns to existing column template
@@ -169,17 +184,15 @@ if file is not None:
                     for key,value in st.session_state.col_map_dict.items():
                         if value != "":
                             parsed_df[key] = data[value]
+                    st.session_state.log.update({'parsed_data_status':'Data Parsed Successfully'})
+                    st.session_state.log.update({'col_map_dict':st.session_state.col_map_dict})
                     st.session_state.parsed_df = parsed_df
-                    show_charts()
+                    st.button("Continue to Charts",key='Continue to Charts',help="Click to continue to the next page to view the charts",on_click=None)
+                    try_log(log)
+                    st.switch_page("pages/2_Charts.py")
                 except Exception as e:
+                    st.session_state.log.update({'error':f"Error in mapping columns: {e}"})
                     st.error(f"Error in mapping columns: {e}")
-            # Parse Data and display random 5 rows to the user with a before and after view
-            
-            
-            
-            
-            # For any data that is not parsed, ask user to correct it with a option to download the wrong data
-            # Add Button to continue to next page : Charts
-            #st.button("Continue to Charts",key='Continue to Charts',help="Click to continue to the next page to view the charts",on_click=None)
-
+                
+                
 
