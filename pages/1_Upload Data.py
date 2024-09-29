@@ -65,7 +65,7 @@ def try_log (log):
         st.error(f"Error in Logging: {e}")
         st.session_state.log_status = False
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide",initial_sidebar_state='collapsed')
 # Database Connection
 DB_uri = f"mongodb+srv://{st.secrets["DB_USERNAME"]}:{st.secrets["DB_PASSWORD"]}@{st.secrets["DB_HOST"]}/?retryWrites=true&w=majority&appName=Log"
 client = MongoClient(DB_uri, server_api=ServerApi('1'))
