@@ -20,6 +20,10 @@ if 'parsed_df' not in st.session_state:
 
 # Ensure parsed_df is available
 if 'parsed_df' in st.session_state and st.session_state.parsed_df is not None:
+    
+    if st.session_state.log_id is not None:
+        st.write("If you find a bug, please report it to the developer with the " + f"Log ID: {st.session_state.log_id}")
+    
     df = st.session_state.parsed_df
     
     # Display the dataframe

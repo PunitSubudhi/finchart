@@ -10,7 +10,6 @@ from pymongo.server_api import ServerApi
 
 
 
-
 def show_charts():
     df = st.session_state.parsed_df
     with st.expander(label="View / Download Parsed Data",expanded=False):
@@ -59,7 +58,8 @@ def try_log (log):
     try:
         # Add Date time to log
         st.session_state.log.update({'date':pd.Timestamp.now()})
-        log.insert_one(st.session_state.log)
+        oid = log.insert_one(st.session_state.log).inserted_id
+        st.session_state.log_id = oid
         st.session_state.log_status = True
     except Exception as e:
         st.error(f"Error in Logging: {e}")
