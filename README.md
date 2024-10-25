@@ -13,7 +13,14 @@ FinCharts is a web application built with Streamlit that allows users to upload 
 
 To use FinCharts, visit the hosted version at [finchart.streamlit.app](https://finchart.streamlit.app).
 
-Please note that some logs are maintained to track errors however no actual data is retained.
+### Login and Signup
+
+To access the application, you need to log in or sign up:
+
+1. **Signup**: Navigate to the signup page and create a new account by providing a username and password. Confirm your password and click the "Signup" button. Once registered, you can log in with your credentials.
+2. **Login**: Navigate to the login page and enter your username and password. Click the "Login" button to access the application.
+
+Please note that the login and signup functionalities are just for exploration purposes and do not provide any real security.
 
 ## Dependencies
 
