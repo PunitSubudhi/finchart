@@ -24,19 +24,25 @@ def initialize_log():
         'date': pd.Timestamp.now()
     }
 
-def log_action(action):
+def log_action(action, details=None):
     """Log an action in the session log."""
-    st.session_state.log['actions'].append({
+    log_entry = {
         'timestamp': pd.Timestamp.now(),
         'action': action
-    })
+    }
+    if details:
+        log_entry['details'] = details
+    st.session_state.log['actions'].append(log_entry)
 
-def log_error(error):
+def log_error(error, details=None):
     """Log an error in the session log."""
-    st.session_state.log['errors'].append({
+    log_entry = {
         'timestamp': pd.Timestamp.now(),
         'error': error
-    })
+    }
+    if details:
+        log_entry['details'] = details
+    st.session_state.log['errors'].append(log_entry)
 
 def update_log_in_db(log):
     """Update the log entry in the database."""
@@ -169,6 +175,11 @@ if file is not None:
         st.error(f"Error loading data: {e}")
         log_error(f"Error loading data: {e}")
         update_log_in_db(log)
+
+    # Save the uploaded file in session state
+    if 'uploaded_files' not in st.session_state:
+        st.session_state.uploaded_files = {}
+    st.session_state.uploaded_files[file.name] = data
 
     # Check if data is there
     if data.empty:
