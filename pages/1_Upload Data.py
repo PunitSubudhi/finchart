@@ -135,7 +135,7 @@ if file is not None:
     # Save the uploaded file in session state
     if 'uploaded_files' not in st.session_state:
         st.session_state.uploaded_files = {}
-    st.session_state.uploaded_files[file.name] = data
+    st.session_state.uploaded_files[file.name] = {'raw': data, 'processed': None}
 
     # Check if data is there
     if data.empty:
@@ -244,6 +244,7 @@ if file is not None:
                     st.session_state.log.update({'parsed_data_status': 'Data Parsed Successfully'})
                     st.session_state.log.update({'col_map_dict': st.session_state.col_map_dict})
                     st.session_state.parsed_df = parsed_df
+                    st.session_state.uploaded_files[file.name]['processed'] = parsed_df
                     st.button(
                         "Continue to Charts", key='Continue to Charts',
                         help="Click to continue to the next page to view the charts", on_click=None
