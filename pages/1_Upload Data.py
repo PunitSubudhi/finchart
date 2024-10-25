@@ -1,7 +1,3 @@
-"""
-This module handles the upload and processing of transaction data.
-"""
-
 import base64
 import os
 import time
@@ -57,7 +53,6 @@ def update_log_in_db(log):
             st.session_state.log_id = result.upserted_id
     except Exception as e:
         st.error(f"Error updating log in database: {e}")
-
 
 def try_log(log):
     """Attempt to log the current session state."""
@@ -135,7 +130,7 @@ if file is not None:
     # Save the uploaded file in session state
     if 'uploaded_files' not in st.session_state:
         st.session_state.uploaded_files = {}
-    st.session_state.uploaded_files[file.name] = {'raw': data, 'processed': None}
+    st.session_state.uploaded_files[file.name] = {'raw': data.to_dict('records'), 'processed': None}
 
     # Check if data is there
     if data.empty:
@@ -160,10 +155,6 @@ if file is not None:
             horizontal=True,
             index=None
         )
-
-        st.session_state.transaction_posted_type = transaction_posted_type
-        log_action(f"Transaction posted type selected: {transaction_posted_type}")
-        update_log_in_db(log)
 
         if transaction_posted_type == 'Plus/Minus':
             st.markdown(
@@ -244,7 +235,7 @@ if file is not None:
                     st.session_state.log.update({'parsed_data_status': 'Data Parsed Successfully'})
                     st.session_state.log.update({'col_map_dict': st.session_state.col_map_dict})
                     st.session_state.parsed_df = parsed_df
-                    st.session_state.uploaded_files[file.name]['processed'] = parsed_df
+                    st.session_state.uploaded_files[file.name]['processed'] = parsed_df.to_dict('records')
                     st.button(
                         "Continue to Charts", key='Continue to Charts',
                         help="Click to continue to the next page to view the charts", on_click=None

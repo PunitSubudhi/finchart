@@ -82,7 +82,7 @@ else:
     if selected_file:
         processed_data = st.session_state.uploaded_files[selected_file]['processed']
         if processed_data is not None:
-            df = processed_data
+            df = pd.DataFrame(processed_data)
             st.session_state.parsed_df = df
 
             if st.session_state.log_id is not None:
