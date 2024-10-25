@@ -23,6 +23,7 @@ def initialize_log():
         'errors': [],
         'date': pd.Timestamp.now()
     }
+    st.session_state.log_id = None
 
 def log_action(action, details=None):
     """Log an action in the session log."""
@@ -47,61 +48,16 @@ def log_error(error, details=None):
 def update_log_in_db(log):
     """Update the log entry in the database."""
     try:
-        log.update_one(
+        result = log.update_one(
             {'session_id': st.session_state.log['session_id']},
             {'$set': st.session_state.log},
             upsert=True
         )
+        if st.session_state.log_id is None:
+            st.session_state.log_id = result.upserted_id
     except Exception as e:
         st.error(f"Error updating log in database: {e}")
 
-def show_charts():
-    """Display various charts based on the parsed data."""
-    df = st.session_state.parsed_df
-    with st.expander(label="View / Download Parsed Data", expanded=False):
-        c1, c2 = st.columns([0.4, 0.6])
-        num_rows = c1.number_input("Number of Rows to Display", min_value=1, max_value=10, value=5)
-        c2.dataframe(df.head(num_rows))
-
-        # Give download option for the Processed Data
-        csv = df.to_csv(index=False)
-        b64 = base64.b64encode(csv.encode()).decode()
-        href = f'<a href="data:file/csv;base64,{b64}" download="parsed_data.csv">Download Parsed Data</a>'
-        c1.download_button("Download Parsed Data", data=csv, file_name="parsed_data.csv", mime="text/csv")
-        c1.markdown(href, unsafe_allow_html=True)
-
-    # Plotting the data
-    st.markdown("### Charts and Graphs")
-
-    # Line chart for Balance over time
-    st.markdown("#### Balance Over Time")
-    fig_balance = px.line(df, x='Date', y='Balance', title='Balance Over Time')
-    st.plotly_chart(fig_balance, use_container_width=True)
-
-    # Bar chart for Amount by Category
-    st.markdown("#### Amount by Category")
-    fig_amount_category = px.bar(df, x='Category', y='Amount', title='Amount by Category', color='Category')
-    st.plotly_chart(fig_amount_category, use_container_width=True)
-
-    # Pie chart for Credit vs Debit
-    st.markdown("#### Credit vs Debit")
-    credit_debit_counts = df['crdr'].value_counts().reset_index()
-    credit_debit_counts.columns = ['Type', 'Count']
-    fig_credit_debit = px.pie(credit_debit_counts, names='Type', values='Count', title='Credit vs Debit')
-    st.plotly_chart(fig_credit_debit, use_container_width=True)
-
-    # Scatter plot for Amount vs Balance
-    st.markdown("#### Amount vs Balance")
-    fig_amount_balance = px.scatter(df, x='Amount', y='Balance', title='Amount vs Balance', color='Category')
-    st.plotly_chart(fig_amount_balance, use_container_width=True)
-
-    # Histogram for Amount distribution
-    st.markdown("#### Amount Distribution")
-    fig_amount_dist = px.histogram(df, x='Amount', title='Amount Distribution')
-    st.plotly_chart(fig_amount_dist, use_container_width=True)
-
-    log_action("Displayed charts")
-    update_log_in_db(log)
 
 def try_log(log):
     """Attempt to log the current session state."""
@@ -258,26 +214,29 @@ if file is not None:
             log_action("Prompted user to map columns")
             update_log_in_db(log)
 
-            num_cols = len(columns)
-            cols = st.columns(num_cols)
+            with st.form(key='column_mapping_form'):
+                num_cols = len(columns)
+                cols = st.columns(num_cols)
 
-            data_columns = list(data.columns)
-            data_types = list(data.dtypes.to_list())
-            rows = [st.columns([0.2, 0.2, 0.8]) for _ in range(len(columns))]
-            for i, row in enumerate(rows):
-                row[0].write(f"{columns[i]} maps to:")
-                if columns[i] == 'crdr' and transaction_posted_type == 'Plus/Minus':
-                    col_name = row[1].selectbox(
-                        f"{columns[i]} maps to:", data_columns, key=i, label_visibility='collapsed',
-                        index=len(data_columns) - 1, disabled=True,
-                        help="This column is automatically added based on the Amount Column"
-                    )
-                else:
-                    col_name = row[1].selectbox(f"{columns[i]} maps to:", data_columns, key=i, label_visibility='collapsed', index=None)
-                if col_name:
-                    st.session_state.col_map_dict[columns[i]] = col_name
+                data_columns = list(data.columns)
+                data_types = list(data.dtypes.to_list())
+                rows = [st.columns([0.2, 0.2, 0.8]) for _ in range(len(columns))]
+                for i, row in enumerate(rows):
+                    row[0].write(f"{columns[i]} maps to:")
+                    if columns[i] == 'crdr' and transaction_posted_type == 'Plus/Minus':
+                        col_name = row[1].selectbox(
+                            f"{columns[i]} maps to:", data_columns, key=i, label_visibility='collapsed',
+                            index=len(data_columns) - 1, disabled=True,
+                            help="This column is automatically added based on the Amount Column"
+                        )
+                    else:
+                        col_name = row[1].selectbox(f"{columns[i]} maps to:", data_columns, key=i, label_visibility='collapsed', index=None)
+                    if col_name:
+                        st.session_state.col_map_dict[columns[i]] = col_name
 
-            if st.button("Map Columns and show charts", key='Map Columns'):
+                submit_button = st.form_submit_button(label='Map Columns and show charts')
+
+            if submit_button:
                 try:
                     for key, value in st.session_state.col_map_dict.items():
                         if value != "":
