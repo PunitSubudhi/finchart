@@ -62,8 +62,10 @@ def login():
                     st.session_state.username = username
                     st.toast("Logged in successfully!")
                     retrieve_session_state(username,session_collection)
+                    return True
                 else:
                     st.toast("Invalid username or password")
+                    return False
                 
             except Exception as e:
                 st.toast(f"Error during login: {e}")
@@ -117,7 +119,8 @@ def main():
     else:
         option = st.radio("Choose an option", ["Login", "Signup"],index=0,horizontal=True,key="login_signup")
         if option == "Login":
-            login()
+            if login():
+                st.rerun()
         elif option == "Signup":
             signup()
 
