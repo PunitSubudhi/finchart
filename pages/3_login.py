@@ -93,7 +93,7 @@ def main():
 
     if st.session_state.logged_in:
         st.write(f"## Welcome, {st.session_state.username}!")
-        st.sidebar.write(f"Logged in as {st.session_state.username}")
+        #st.sidebar.write(f"Logged in as {st.session_state.username}")
         
         cols = st.columns(4)
         if cols[0].button("Logout"):
