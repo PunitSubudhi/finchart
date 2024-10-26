@@ -89,7 +89,7 @@ def main():
         st.divider()
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
-        st.sidebar.write("Please login to access the app.")
+        #st.sidebar.write("Please login to access the app.")
 
     if st.session_state.logged_in:
         st.write(f"## Welcome, {st.session_state.username}!")
