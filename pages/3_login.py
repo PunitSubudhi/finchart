@@ -31,9 +31,19 @@ def signup():
                 try:
                     hashed_password = hash_password(password)
                     user = {"username": username, "password": hashed_password}
-                    users_collection.insert_one(user)
-                    st.success("User registered successfully! Please login.")
-                    st.rerun()
+                    # Check if username exists: 
+                    if users_collection.find_one({"username": username}):
+                        st.error("Username already exists!")
+                    else:
+                        insert_user_response = users_collection.insert_one(user)
+                        # Check if the user was inserted successfully
+                        if insert_user_response.acknowledged:
+                            st.success("User registered successfully! Please login.")
+                            st.write(insert_user_response)
+                            st.rerun()
+                        else:
+                            st.error("Error registering user")
+                            st.write(insert_user_response)
                 except Exception as e:
                     st.error(f"Error during signup: {e}")
 
