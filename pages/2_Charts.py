@@ -8,49 +8,7 @@ import openpyxl
 import base64
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-
-def initialize_log():
-    """Initialize a unique log entry for the session."""
-    st.session_state.log = {
-        'session_id': str(uuid.uuid4()),
-        'actions': [],
-        'errors': [],
-        'date': pd.Timestamp.now()
-    }
-    st.session_state.log_id = None
-
-def log_action(action, details=None):
-    """Log an action in the session log."""
-    log_entry = {
-        'timestamp': pd.Timestamp.now(),
-        'action': action
-    }
-    if details:
-        log_entry['details'] = details
-    st.session_state.log['actions'].append(log_entry)
-
-def log_error(error, details=None):
-    """Log an error in the session log."""
-    log_entry = {
-        'timestamp': pd.Timestamp.now(),
-        'error': error
-    }
-    if details:
-        log_entry['details'] = details
-    st.session_state.log['errors'].append(log_entry)
-
-def update_log_in_db(log):
-    """Update the log entry in the database."""
-    try:
-        result = log.update_one(
-            {'session_id': st.session_state.log['session_id']},
-            {'$set': st.session_state.log},
-            upsert=True
-        )
-        if st.session_state.log_id is None:
-            st.session_state.log_id = result.upserted_id
-    except Exception as e:
-        st.error(f"Error updating log in database: {e}")
+from custom_functions import *
 
 # Database Connection
 DB_uri = (
@@ -59,6 +17,9 @@ DB_uri = (
 )
 client = MongoClient(DB_uri, server_api=ServerApi('1'))
 log = client['logs']['log']
+
+flex_buttons()
+navbar()
 
 # Initialize log if not already initialized
 if 'log' not in st.session_state:
@@ -71,9 +32,6 @@ if 'uploaded_files' not in st.session_state or not st.session_state.uploaded_fil
     log_action("Prompted user to upload data")
     update_log_in_db(log)
     
-    # Button to redirect to Upload data page
-    if st.button('Upload Data'):
-        st.switch_page("pages/1_Upload Data.py")
 else:
     # Allow user to select which file to view
     file_names = list(st.session_state.uploaded_files.keys())

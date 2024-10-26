@@ -1,14 +1,16 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from custom_functions import *
+
+
+if 'log' not in st.session_state:
+    initialize_log()
 
 st.title('Welcome to FinChart | A financial charting app')
-st.sidebar.title('To Do')
-st.switch_page("pages/1_Upload Data.py")
 
-# Add Authentication
-# Add Database Connection
-# Add Data Upload
-# Add Data Processing
-# Add Data Analysis
-# Add Data Visualization
+
+if st.session_state.get('logged_in') is None:
+    st.switch_page("pages/3_login.py")
+else:
+   navbar()

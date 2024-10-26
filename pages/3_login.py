@@ -3,6 +3,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import hashlib
 import pandas as pd
+from custom_functions import *
 
 # Database Connection
 DB_uri = (
@@ -17,80 +18,94 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def signup():
-    st.title("Signup")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    confirm_password = st.text_input("Confirm Password", type="password")
-    
-    if st.button("Signup"):
-        if password != confirm_password:
-            st.error("Passwords do not match!")
-        else:
-            try:
-                hashed_password = hash_password(password)
-                user = {"username": username, "password": hashed_password}
-                users_collection.insert_one(user)
-                st.success("User registered successfully! Please login.")
-            except Exception as e:
-                st.error(f"Error during signup: {e}")
+    with st.form(key="signup_form"):
+        st.title("Signup")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        confirm_password = st.text_input("Confirm Password", type="password")
+        
+        if st.form_submit_button("Signup"):
+            if password != confirm_password:
+                st.error("Passwords do not match!")
+            else:
+                try:
+                    hashed_password = hash_password(password)
+                    user = {"username": username, "password": hashed_password}
+                    users_collection.insert_one(user)
+                    st.success("User registered successfully! Please login.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error during signup: {e}")
 
 def login():
-    st.title("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    
-    if st.button("Login"):
-        try:
-            hashed_password = hash_password(password)
-            user = users_collection.find_one({"username": username, "password": hashed_password})
-            if user:
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.success("Logged in successfully!")
-                retrieve_session_state(username)
-            else:
-                st.error("Invalid username or password")
-        except Exception as e:
-            st.error(f"Error during login: {e}")
+    with st.form(key="login_form"):
+        st.title("Login")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        
+        if st.form_submit_button("Login"):
+            try:
+                hashed_password = hash_password(password)
+                user = users_collection.find_one({"username": username, "password": hashed_password})
+                if user:
+                    st.session_state.logged_in = True
+                    st.session_state.username = username
+                    st.toast("Logged in successfully!")
+                    retrieve_session_state(username,session_collection)
+                else:
+                    st.toast("Invalid username or password")
+                st.rerun()
+            except Exception as e:
+                st.toast(f"Error during login: {e}")
 
-def save_session_state(username):
-    try:
-        session_data = {key: value.to_dict('records') if isinstance(value, pd.DataFrame) else value for key, value in st.session_state.items()}
-        session_collection.update_one(
-            {"username": username},
-            {"$set": {"session_state": session_data}},
-            upsert=True
-        )
-        st.success("Session state synced with cloud.")
-    except Exception as e:
-        st.error(f"Error saving session state: {e}")
 
-def retrieve_session_state(username):
-    try:
-        session_data = session_collection.find_one({"username": username})
-        if session_data and "session_state" in session_data:
-            for key, value in session_data["session_state"].items():
-                st.session_state[key] = pd.DataFrame(value) if isinstance(value, list) and all(isinstance(i, dict) for i in value) else value
-        st.success("Session state retrieved from cloud.")
-    except Exception as e:
-        st.error(f"Error retrieving session state: {e}")
+
 
 def main():
+    flex_buttons()
+    if st.session_state.get("logged_in") is None or not st.session_state.logged_in:
+        st.title("Welcome to FinCharts")
+        st.write("""
+        FinCharts allows you to upload and analyze your financial transactions. 
+        To get started, please log in or sign up.
+        
+        **Features:**
+        - **Login**: Access your account by entering your username and password.
+        - **Signup**: Create a new account by providing a username and password.
+        - **Sync State**: Save your current session state to the cloud.
+        - **Retrieve State**: Retrieve your session state from the cloud.
+        - **Logout**: Log out of your account.
+        """)
+        st.divider()
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
+        st.sidebar.write("Please login to access the app.")
+
     if st.session_state.logged_in:
-        st.write(f"Welcome, {st.session_state.username}!")
+        st.write(f"## Welcome, {st.session_state.username}!")
+        st.sidebar.write(f"Logged in as {st.session_state.username}")
         
-        if st.button("Logout"):
+        cols = st.columns(4)
+        if cols[0].button("Logout"):
             st.session_state.logged_in = False
+            st.session_state.clear()
+            st.rerun()
         
-        if st.button("Sync Current State with Cloud"):
-            save_session_state(st.session_state.username)
+        if cols[1].button("Sync Current State with Cloud"):
+            save_session_state(st.session_state.username,session_collection)
         
-        if st.button("Retrieve State from Cloud"):
-            retrieve_session_state(st.session_state.username)
+        if cols[2].button("Retrieve State from Cloud"):
+            retrieve_session_state(st.session_state.username,session_collection)
+            
+        if cols[3].button("Clear Session State and logout"):
+            st.session_state.logged_in = False
+            st.session_state.clear()
+            st.rerun()
+        
+        #Butons to navigate to pages
+        navbar()
     else:
-        option = st.selectbox("Choose an option", ["Login", "Signup"])
+        option = st.radio("Choose an option", ["Login", "Signup"],index=0,horizontal=True,key="login_signup")
         if option == "Login":
             login()
         elif option == "Signup":

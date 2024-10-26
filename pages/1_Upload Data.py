@@ -10,63 +10,9 @@ from pymongo.server_api import ServerApi
 from streamlit_extras.dataframe_explorer import dataframe_explorer
 import openpyxl
 import uuid
+from custom_functions import *
 
-def initialize_log():
-    """Initialize a unique log entry for the session."""
-    st.session_state.log = {
-        'session_id': str(uuid.uuid4()),
-        'actions': [],
-        'errors': [],
-        'date': pd.Timestamp.now()
-    }
-    st.session_state.log_id = None
-
-def log_action(action, details=None):
-    """Log an action in the session log."""
-    log_entry = {
-        'timestamp': pd.Timestamp.now(),
-        'action': action
-    }
-    if details:
-        log_entry['details'] = details
-    st.session_state.log['actions'].append(log_entry)
-
-def log_error(error, details=None):
-    """Log an error in the session log."""
-    log_entry = {
-        'timestamp': pd.Timestamp.now(),
-        'error': error
-    }
-    if details:
-        log_entry['details'] = details
-    st.session_state.log['errors'].append(log_entry)
-
-def update_log_in_db(log):
-    """Update the log entry in the database."""
-    try:
-        result = log.update_one(
-            {'session_id': st.session_state.log['session_id']},
-            {'$set': st.session_state.log},
-            upsert=True
-        )
-        if st.session_state.log_id is None:
-            st.session_state.log_id = result.upserted_id
-    except Exception as e:
-        st.error(f"Error updating log in database: {e}")
-
-def try_log(log):
-    """Attempt to log the current session state."""
-    try:
-        st.session_state.log.update({'date': pd.Timestamp.now()})
-        update_log_in_db(log)
-        st.session_state.log_status = True
-    except Exception as e:
-        st.error(f"Error in Logging: {e}")
-        st.session_state.log_status = False
-        log_error(f"Error in Logging: {e}")
-        update_log_in_db(log)
-
-st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
+#st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
 # Database Connection
 DB_uri = (
@@ -90,10 +36,14 @@ parsed_df = pd.DataFrame(columns=st.session_state.fixed_columns)
 st.session_state.col_map_dict = {col: None for col in columns}
 st.session_state.log_status = False
 
+flex_buttons()
+
+# Navbar
+navbar()
+
 st.markdown("### Please Upload your Transactions below to continue")
 log_action("Displayed upload prompt")
 update_log_in_db(log)
-
 # Upload File
 file = st.file_uploader(
     'Upload your Transactions here',
