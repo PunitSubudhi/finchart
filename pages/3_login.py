@@ -118,10 +118,8 @@ def main():
         option = st.radio("Choose an option", ["Login", "Signup"],index=0,horizontal=True,key="login_signup")
         if option == "Login":
             login()
-            st.rerun()
         elif option == "Signup":
             signup()
-            st.rerun()
 
 if __name__ == "__main__":
     main()
