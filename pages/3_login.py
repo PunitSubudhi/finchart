@@ -64,7 +64,7 @@ def login():
                     retrieve_session_state(username,session_collection)
                 else:
                     st.toast("Invalid username or password")
-                st.rerun()
+                
             except Exception as e:
                 st.toast(f"Error during login: {e}")
 
