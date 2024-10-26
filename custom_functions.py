@@ -11,7 +11,7 @@ def navbar():
     nav = st.columns([1, 1, 1])
     #Get relative path to pages folder
     for col,page in zip(nav, [file for file in os.listdir("pages")]):
-        if col.button(f"Go to {page}",key=page):
+        if col.button(f"Go to {page}",key=f"nav_{page}"):
             st.switch_page(f"pages/{page}")
 
 def initialize_log():

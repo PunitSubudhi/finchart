@@ -192,7 +192,7 @@ if file is not None:
                     )
                     log_action("Mapped columns and parsed data successfully")
                     update_log_in_db(log)
-                    try_log(log)
+                    #try_log(log) # Commented out to avoid errors
                     st.switch_page("pages/2_Charts.py")
                 except KeyError as e:
                     st.session_state.log.update({'error': f"KeyError in mapping columns: {e}"})
