@@ -122,7 +122,9 @@ def main():
             if login():
                 st.rerun()
         elif option == "Signup":
-            signup()
+            if signup():
+                st.rerun()
+            
 
 if __name__ == "__main__":
     main()
