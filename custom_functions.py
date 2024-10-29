@@ -6,6 +6,10 @@ from pymongo.mongo_client import MongoClient
 import hashlib
 from pymongo.server_api import ServerApi
 
+def continue_as_guest():
+    st.session_state.logged_in = False
+    st.session_state.clear()
+    st.rerun()
 
 def get_db_conn() -> dict:
     DB_uri = (
@@ -34,13 +38,16 @@ def initialise_db_conn() -> bool:
     #Test connection
     try:
         st.session_state.client.server_info()
-        st.success("Database connection successful.")
+        #st.success("Database connection successful.")
         return True
     except Exception as e:
         st.error(f"Error connecting to database: {e}")
         return False
+    if 'log' not in st.session_state:
+        initialize_log()
     
 def navbar() -> None:
+    """
     if st.session_state.get("username") is not None:
         st.write(f"Welcome, {st.session_state.username}")
     else: 
@@ -50,7 +57,8 @@ def navbar() -> None:
     for col,page in zip(nav, [file for file in os.listdir("pages")]):
         if col.button(f"Go to {page}",key=f"nav_{page.split('.')[0]}"):
             st.toast(f"nav_{page}-{uuid.uuid1()}")
-            st.switch_page(f"pages/{page}")
+            st.switch_page(f"pages/{page}")"""
+    pass
 
 def initialize_log() -> None:
     """Initialize a unique log entry for the session."""
@@ -115,6 +123,15 @@ def flex_buttons() -> None:
 def save_session_state(username) -> None:
     try:
         session_data = {key: value.to_dict('records') if isinstance(value, pd.DataFrame) else value for key, value in st.session_state.items()}
+        print(session_data.pop("client", None))
+        session_data.pop("log_table", None)
+        session_data.pop("users_collection", None)
+        session_data.pop("session_collection", None)
+        session_data.pop("log", None)
+        session_data.pop("log_id", None)
+        session_data.pop("logged_in", None)
+        session_data.pop("username", None)
+        st.write(session_data)
         st.session_state.session_collection.update_one(
             {"username": username},
             {"$set": {"session_state": session_data}},
@@ -123,10 +140,11 @@ def save_session_state(username) -> None:
         st.success("Session state synced with cloud.")
     except Exception as e:
         st.error(f"Error saving session state: {e}")
+        print(e)
 
-def retrieve_session_state(username,session_collection):
+def retrieve_session_state(username):
     try:
-        session_data = session_collection.find_one({"username": username})
+        session_data = st.session_state.session_collection.find_one({"username": username})
         if session_data and "session_state" in session_data:
             for key, value in session_data["session_state"].items():
                 st.session_state[key] = pd.DataFrame(value) if isinstance(value, list) and all(isinstance(i, dict) for i in value) else value
@@ -177,12 +195,12 @@ def login() -> bool:
         if st.form_submit_button("Login"):
             try:
                 hashed_password = hash_password(password)
-                user = users_collection.find_one({"username": username, "password": hashed_password})
+                user = st.session_state.users_collection.find_one({"username": username, "password": hashed_password})
                 if user:
                     st.session_state.logged_in = True
                     st.session_state.username = username
                     st.toast("Logged in successfully!")
-                    retrieve_session_state(username,session_collection)
+                    retrieve_session_state(username)
                     return True
                 else:
                     st.toast("Invalid username or password")
@@ -192,49 +210,45 @@ def login() -> bool:
                 st.toast(f"Error during login: {e}")
 
 def logout() -> None:
+    st.popover("Are you sure you want to logout?")
     st.session_state.logged_in = False
     st.session_state.clear()
     st.rerun()
 
 def logged_in_page():
+    flex_buttons()
     st.write(f"## Welcome, {st.session_state.username}!")
     #st.sidebar.write(f"Logged in as {st.session_state.username}")
-    
-    cols = st.columns(4)
-    if cols[0].button("Logout"):
-        logout()
-    
-    if cols[1].button("Sync Current State with Cloud"):
-        save_session_state(st.session_state.username,session_collection)
-    
-    if cols[2].button("Retrieve State from Cloud"):
-        retrieve_session_state(st.session_state.username,session_collection)
+    if st.session_state.get("logged_in") is None or not st.session_state.logged_in:
+        option = st.radio("Choose an option", ["Login", "Signup"],index=0,horizontal=True,key="login_signup")
+        if option == "Login":
+            if login():
+                st.rerun()
+        elif option == "Signup":
+            signup()
+    else:
+        cols = st.columns(4)
+        if cols[0].button("Logout"):
+            logout()
         
-    if cols[3].button("Clear Session State and logout"):
-        st.session_state.logged_in = False
-        st.session_state.clear()
-        st.rerun()
-    
-    #Butons to navigate to pages
-    navbar()
+        if cols[1].button("Sync Current State with Cloud"):
+            save_session_state(st.session_state.username)
+        
+        if cols[2].button("Retrieve State from Cloud"):
+            retrieve_session_state(st.session_state.username)
+            
+        if cols[3].button("Clear Session State and logout"):
+            st.session_state.logged_in = False
+            st.session_state.clear()
+            st.rerun()
+        
+        #Butons to navigate to pages
+        navbar()
 
 @st.fragment
 def main():
     flex_buttons()
-    if st.session_state.get("logged_in") is None or not st.session_state.logged_in:
-        st.title("Welcome to FinCharts")
-        st.write("""
-        FinCharts allows you to upload and analyze your financial transactions. 
-        To get started, please log in or sign up.
         
-        **Features:**
-        - **Login**: Access your account by entering your username and password.
-        - **Signup**: Create a new account by providing a username and password.
-        - **Sync State**: Save your current session state to the cloud.
-        - **Retrieve State**: Retrieve your session state from the cloud.
-        - **Logout**: Log out of your account.
-        """)
-        st.divider()
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
         #st.sidebar.write("Please login to access the app.")
@@ -250,10 +264,10 @@ def main():
             st.rerun()
         
         if cols[1].button("Sync Current State with Cloud"):
-            save_session_state(st.session_state.username,session_collection)
+            save_session_state(st.session_state.username)
         
         if cols[2].button("Retrieve State from Cloud"):
-            retrieve_session_state(st.session_state.username,session_collection)
+            retrieve_session_state(st.session_state.username)
             
         if cols[3].button("Clear Session State and logout"):
             st.session_state.logged_in = False

@@ -187,14 +187,13 @@ def upload_data():
                         st.session_state.log.update({'col_map_dict': st.session_state.col_map_dict})
                         st.session_state.parsed_df = parsed_df
                         st.session_state.uploaded_files[file.name]['processed'] = parsed_df.to_dict('records')
-                        st.button(
+                        if st.button(
                             "Continue to Charts", key='Continue to Charts',
                             help="Click to continue to the next page to view the charts", on_click=None
-                        )
-                        log_action("Mapped columns and parsed data successfully")
-                        update_log_in_db(log)
-                        #try_log(log) # Commented out to avoid errors
-                        st.switch_page("pages/2_Charts.py")
+                        ):
+                            log_action("Mapped columns and parsed data successfully")
+                            update_log_in_db(log)
+                            st.Page(show_charts, title="View Charts").run()
                     except KeyError as e:
                         st.session_state.log.update({'error': f"KeyError in mapping columns: {e}"})
                         st.error(f"KeyError in mapping columns: {e}")
