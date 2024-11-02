@@ -129,7 +129,7 @@ def main():
             st.session_state.logged_in = True
             st.session_state.username = "Guest"
             retrieve_session_state("Guest",session_collection)
-            st.switch_page("pages/1_Charts.py")
+            st.switch_page("pages/3_Charts.py")
 
 if __name__ == "__main__":
     main()
