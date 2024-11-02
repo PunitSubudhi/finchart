@@ -117,12 +117,14 @@ def main():
         #Butons to navigate to pages
         navbar()
     else:
-        option = st.radio("Choose an option", ["Login", "Signup"],index=0,horizontal=True,key="login_signup")
+        option = st.radio("Choose an option", ["Login", "Signup","Continue as Guest"],index=0,horizontal=True,key="login_signup")
         if option == "Login":
             if login():
                 st.rerun()
         elif option == "Signup":
             signup()
+        elif option == "Continue as Guest":
+            st.switch_page("pages/1_Upload Data.py")
 
 if __name__ == "__main__":
     main()
