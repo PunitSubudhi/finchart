@@ -93,7 +93,7 @@ def main():
         st.session_state.logged_in = False
         #st.sidebar.write("Please login to access the app.")
 
-    if st.session_state.logged_in:
+    if st.session_state.logged_in and st.session_state.username != "Guest":
         st.write(f"## Welcome, {st.session_state.username}!")
         #st.sidebar.write(f"Logged in as {st.session_state.username}")
         
@@ -117,19 +117,21 @@ def main():
         #Butons to navigate to pages
         navbar()
     else:
-        option = st.radio("Choose an option", ["Login", "Signup","Continue as Guest","Continue as Guest with Sample Data"],index=3,horizontal=True,key="login_signup")
-        if option == "Login":
-            if login():
-                st.rerun()
-        elif option == "Signup":
-            signup()
-        elif option == "Continue as Guest":
-            st.switch_page("pages/1_Upload Data.py")
-        elif option == "Continue as Guest with Sample Data":
-            st.session_state.logged_in = True
-            st.session_state.username = "Guest"
-            retrieve_session_state("Guest",session_collection)
-            st.switch_page("pages/3_Charts.py")
+        with st.form(key="login_signup_form"):
+            option = st.radio("Choose an option", ["Login", "Signup","Continue as Guest","Continue as Guest with Sample Data"],index=3,horizontal=True,key="login_signup")
+            if st.form_submit_button("Submit"):
+                if option == "Login":
+                    if login():
+                        st.rerun()
+                elif option == "Signup":
+                    signup()
+                elif option == "Continue as Guest":
+                    st.switch_page("pages/1_Upload Data.py")
+                elif option == "Continue as Guest with Sample Data":
+                    st.session_state.logged_in = True
+                    st.session_state.username = "Guest"
+                    retrieve_session_state("Guest",session_collection)
+                    st.switch_page("pages/2_Charts.py")
 
 if __name__ == "__main__":
     main()

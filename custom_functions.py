@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 
 def navbar():
+    """
     if st.session_state.get("username") is not None:
         st.write(f"Welcome, {st.session_state.username}")
     else: 
@@ -14,6 +15,8 @@ def navbar():
         if col.button(f"Go to {page}",key=f"nav_{page.split('.')[0]}"):
             st.toast(f"nav_{page}-{uuid.uuid1()}")
             st.switch_page(f"pages/{page}")
+    """
+    pass
 
 def initialize_log():
     """Initialize a unique log entry for the session."""
