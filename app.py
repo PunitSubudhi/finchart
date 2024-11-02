@@ -10,7 +10,7 @@ print(initialise_db_conn())
 
 #st.title('Welcome to FinChart | A financial charting app')
 
-st.write(st.session_state)
+st.expander("",expanded=False).write(st.session_state)
 if st.session_state.get('logged_in') is None or st.session_state.get('logged_in') == False:
     page_selected = st.navigation({
         "Manage Account": [

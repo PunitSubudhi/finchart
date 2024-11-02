@@ -16,12 +16,6 @@ from custom_functions import *
 
 # Database Connection
 def upload_data():
-    DB_uri = (
-        f"mongodb+srv://{st.secrets['DB_USERNAME']}:{st.secrets['DB_PASSWORD']}"
-        f"@{st.secrets['DB_HOST']}/?retryWrites=true&w=majority&appName=Log"
-    )
-    client = MongoClient(DB_uri, server_api=ServerApi('1'))
-    log = client['logs']['log']
 
     # Initialize log
     if 'log' not in st.session_state:
@@ -44,7 +38,7 @@ def upload_data():
 
     st.markdown("### Please Upload your Transactions below to continue")
     log_action("Displayed upload prompt")
-    update_log_in_db(log)
+    update_log_in_db()
     # Upload File
     file = st.file_uploader(
         'Upload your Transactions here',
@@ -58,7 +52,7 @@ def upload_data():
     # Check if file is uploaded
     if file is not None:
         log_action(f"File uploaded: {file.name}")
-        update_log_in_db(log)
+        update_log_in_db()
 
         # Detect File Type
         if file.type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
@@ -72,11 +66,11 @@ def upload_data():
             data_columns = list(data.columns)
             data_types = list(data.dtypes.to_list())
             log_action(f"Data loaded with {len(data)} rows and {len(data.columns)} columns")
-            update_log_in_db(log)
+            update_log_in_db()
         except Exception as e:
             st.error(f"Error loading data: {e}")
             log_error(f"Error loading data: {e}")
-            update_log_in_db(log)
+            update_log_in_db()
 
         # Save the uploaded file in session state
         if 'uploaded_files' not in st.session_state:
@@ -87,12 +81,12 @@ def upload_data():
         if data.empty:
             st.error("No Data Found in the Uploaded File")
             log_error("No Data Found in the Uploaded File")
-            update_log_in_db(log)
+            update_log_in_db()
         else:
             num_rows, num_cols = data.shape
             st.toast(f"Data Loaded Successfully with {num_rows} rows and {num_cols} columns", icon='✅')
             log_action(f"Data Loaded Successfully with {num_rows} rows and {num_cols} columns")
-            update_log_in_db(log)
+            update_log_in_db()
 
             discover_data_view = st.expander('Click here to view and discover data', expanded=False)
             with discover_data_view:
@@ -128,25 +122,25 @@ def upload_data():
                         data[amount_column_name] = data[amount_column_name].apply(lambda x: x if x > 0 else -x)
                         st.toast("Adding Column cr/dr as Credit/Debit")
                         log_action("Added Column cr/dr as Credit/Debit")
-                        update_log_in_db(log)
+                        update_log_in_db()
                     except KeyError as e:
                         st.error(f"KeyError in Adding Column cr/dr: {e}")
                         log_error(f"KeyError in Adding Column cr/dr: {e}")
-                        update_log_in_db(log)
+                        update_log_in_db()
                     except TypeError as e:
                         st.error(f"TypeError in Adding Column cr/dr: {e}")
                         log_error(f"TypeError in Adding Column cr/dr: {e}")
-                        update_log_in_db(log)
+                        update_log_in_db()
                     except Exception as e:
                         st.error(f"Unexpected error in Adding Column cr/dr: {e}")
                         log_error(f"Unexpected error in Adding Column cr/dr: {e}")
-                        update_log_in_db(log)
+                        update_log_in_db()
 
             elif transaction_posted_type == 'Debit/Credit':
                 amount_column_name = 'Amount'
                 st.session_state.amount_column_name = amount_column_name
                 log_action("Transaction posted type is Debit/Credit")
-                update_log_in_db(log)
+                update_log_in_db()
             else:
                 amount_column_name = None
 
@@ -154,7 +148,7 @@ def upload_data():
                 # Ask User to map columns to existing column template
                 st.markdown("#### Map Columns to existing column template")
                 log_action("Prompted user to map columns")
-                update_log_in_db(log)
+                update_log_in_db()
 
                 with st.form(key='column_mapping_form'):
                     num_cols = len(columns)
@@ -192,20 +186,20 @@ def upload_data():
                             help="Click to continue to the next page to view the charts", on_click=None
                         ):
                             log_action("Mapped columns and parsed data successfully")
-                            update_log_in_db(log)
+                            update_log_in_db()
                             st.Page(show_charts, title="View Charts").run()
                     except KeyError as e:
                         st.session_state.log.update({'error': f"KeyError in mapping columns: {e}"})
                         st.error(f"KeyError in mapping columns: {e}")
                         log_error(f"KeyError in mapping columns: {e}")
-                        update_log_in_db(log)
+                        update_log_in_db()
                     except TypeError as e:
                         st.session_state.log.update({'error': f"TypeError in mapping columns: {e}"})
                         st.error(f"TypeError in mapping columns: {e}")
                         log_error(f"TypeError in mapping columns: {e}")
-                        update_log_in_db(log)
+                        update_log_in_db()
                     except Exception as e:
                         st.session_state.log.update({'error': f"Unexpected error in mapping columns: {e}"})
                         st.error(f"Unexpected error in mapping columns: {e}")
                         log_error(f"Unexpected error in mapping columns: {e}")
-                        update_log_in_db(log)
+                        update_log_in_db()

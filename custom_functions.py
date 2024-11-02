@@ -5,6 +5,7 @@ import pandas as pd
 from pymongo.mongo_client import MongoClient
 import hashlib
 from pymongo.server_api import ServerApi
+import numpy as np
 
 def continue_as_guest():
     st.session_state.logged_in = False
@@ -69,6 +70,7 @@ def initialize_log() -> None:
         'date': pd.Timestamp.now()
     }
     st.session_state.log_id = None
+    update_log_in_db()
 
 def log_action(action, details=None, update_db=False)   -> None:
     """Log an action in the session log."""
@@ -81,7 +83,7 @@ def log_action(action, details=None, update_db=False)   -> None:
     st.session_state.log['actions'].append(log_entry)
     
     if update_db:
-        update_log_in_db(st.session_state.log)
+        update_log_in_db()
     
 
 def log_error(error, details=None) -> None:
@@ -94,8 +96,8 @@ def log_error(error, details=None) -> None:
         log_entry['details'] = details
     st.session_state.log['errors'].append(log_entry)
 
-def update_log_in_db(log) -> None:
-    """Update the log entry in the database."""        
+def update_log_in_db() -> None:
+    """Update the log entry in the database."""
     try:
         result = st.session_state.log_table.update_one(
             {'session_id': st.session_state.log['session_id']},
@@ -123,21 +125,25 @@ def flex_buttons() -> None:
 def save_session_state(username) -> None:
     try:
         session_data = {key: value.to_dict('records') if isinstance(value, pd.DataFrame) else value for key, value in st.session_state.items()}
-        print(session_data.pop("client", None))
-        session_data.pop("log_table", None)
-        session_data.pop("users_collection", None)
-        session_data.pop("session_collection", None)
-        session_data.pop("log", None)
-        session_data.pop("log_id", None)
-        session_data.pop("logged_in", None)
-        session_data.pop("username", None)
+        session_data = {key: (None if isinstance(value, (pd.Series, np.ndarray)) and pd.isna(value).any() else value) for key, value in session_data.items()}
+        
+        # Remove unwanted keys from session_data
+        keys_to_remove = ["client", "log_table", "users_collection", "session_collection", "log", "log_id", "logged_in"]
+        for key in keys_to_remove:
+            session_data.pop(key, None)
+        
         st.write(session_data)
-        st.session_state.session_collection.update_one(
-            {"username": username},
-            {"$set": {"session_state": session_data}},
-            upsert=True
-        )
-        st.success("Session state synced with cloud.")
+        
+        try:
+            st.session_state.session_collection.update_one(
+                {"username": username},
+                {"$set": {"session_state": session_data}},
+                upsert=True
+            )
+            st.success("Session state synced with cloud.")
+        except Exception as e:
+            st.error(f"Error saving session state: {e}")
+            print(e)
     except Exception as e:
         st.error(f"Error saving session state: {e}")
         print(e)

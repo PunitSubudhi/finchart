@@ -31,7 +31,7 @@ def show_charts():
         # Ask user to upload data and go through the steps
         st.write('Please upload your data to continue')
         log_action("Prompted user to upload data")
-        update_log_in_db(log)
+        update_log_in_db()
         
     else:
         # Allow user to select which file to view
@@ -86,19 +86,19 @@ def show_charts():
                         st.plotly_chart(fig_amount_dist, use_container_width=True)
 
                         log_action("Displayed charts for selected file", details={'file_name': selected_file})
-                        update_log_in_db(log)
+                        update_log_in_db()
                     except Exception as e:
                         st.error(f"Error displaying charts: {e}")
                         log_error(f"Error displaying charts: {e}", details={'file_name': selected_file})
-                        update_log_in_db(log)
+                        update_log_in_db()
                 else:
                     st.error("The uploaded file does not contain the necessary columns. Please upload a valid file.")
                     log_error("Uploaded file missing necessary columns", details={'file_name': selected_file})
-                    update_log_in_db(log)
+                    update_log_in_db()
             else:
                 st.error("Processed data not found. Please upload your data to continue.")
                 log_error("Processed data not found", details={'file_name': selected_file})
-                update_log_in_db(log)
+                update_log_in_db()
 
 # Run the main function
 if __name__ == "__main__":
