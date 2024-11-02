@@ -117,7 +117,7 @@ def main():
         #Butons to navigate to pages
         navbar()
     else:
-        option = st.radio("Choose an option", ["Login", "Signup","Continue as Guest","Continue as Guest with Sample Data"],index=4,horizontal=True,key="login_signup")
+        option = st.radio("Choose an option", ["Login", "Signup","Continue as Guest","Continue as Guest with Sample Data"],index=3,horizontal=True,key="login_signup")
         if option == "Login":
             if login():
                 st.rerun()
