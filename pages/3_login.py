@@ -117,7 +117,7 @@ def main():
         #Butons to navigate to pages
         navbar()
     else:
-        option = st.radio("Choose an option", ["Login", "Signup","Continue as Guest","Continue as Guest with Sample Data"],index=0,horizontal=True,key="login_signup")
+        option = st.radio("Choose an option", ["Login", "Signup","Continue as Guest","Continue as Guest with Sample Data"],index=4,horizontal=True,key="login_signup")
         if option == "Login":
             if login():
                 st.rerun()
@@ -128,7 +128,8 @@ def main():
         elif option == "Continue as Guest with Sample Data":
             st.session_state.logged_in = True
             st.session_state.username = "Guest"
-            st.switch_page("pages/1_Upload Data.py")
+            retrieve_session_state("Guest",session_collection)
+            st.switch_page("pages/1_Charts.py")
 
 if __name__ == "__main__":
     main()
